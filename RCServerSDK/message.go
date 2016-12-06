@@ -276,17 +276,55 @@ type Message struct {
 			  return &ret,err
 			}
 	  }
-  
 
 	/**
-	 *发送聊天室消息方法（一个用户向聊天室发送消息，单条消息最大 128k。每秒钟限 100 次。） 
-	 * 
-	 *@param  fromUserId:发送人用户 Id。（必传） 
-	 *@param  toChatroomId:接收聊天室Id，提供多个本参数可以实现向多个聊天室发送消息。（必传） 
-	 *@param  txtMessage:发送消息内容（必传）
+	 *发送聊天室消息方法（一个用户向聊天室发送消息，单条消息最大 128k。每秒钟限 100 次。）
+	 *
+	 *@param  fromUserId:发送人用户 Id。（必传）
+	 *@param  toChatroomId:接收聊天室Id，提供多个本参数可以实现向多个聊天室发送消息。（必传）
+	 *@param  objectName:自定义消息类型名，必传
+	 *@param  jsonStr: json格式的消息串
 	 *
 	 *@return CodeSuccessReslut
 	 */
+	func (self * Message) PublishChatroomCustom(fromUserId string, toChatroomId []string, objectName, jsonStr string)(*CodeSuccessReslut, error) {
+		if( fromUserId == "") {
+			return nil,errors.New("Paramer 'fromUserId' is required");
+		}
+
+		if(len(toChatroomId) == 0) {
+			return nil,errors.New("Paramer 'toChatroomId' is required");
+		}
+
+		destinationUrl := RONGCLOUDURI + "/message/chatroom/publish.json"
+		req := httplib.Post(destinationUrl)
+		fillHeader(req, self.AppKey, self.AppSecret)
+		req.Param("fromUserId", fromUserId)
+		for _,item := range toChatroomId {
+			req.Param("toChatroomId", item)
+		}
+		req.Param("objectName", objectName)
+		req.Param("content",jsonStr)
+		byteData, err := req.Bytes()
+		if err != nil {
+			return nil,err
+		}else{
+			strData := string(byteData)
+			var ret = CodeSuccessReslut{}
+			err = JsonParse(strData,&ret)
+			return &ret,err
+		}
+	}
+
+/**
+ *发送聊天室消息方法（一个用户向聊天室发送消息，单条消息最大 128k。每秒钟限 100 次。）
+ *
+ *@param  fromUserId:发送人用户 Id。（必传）
+ *@param  toChatroomId:接收聊天室Id，提供多个本参数可以实现向多个聊天室发送消息。（必传）
+ *@param  txtMessage:发送消息内容（必传）
+ *
+ *@return CodeSuccessReslut
+ */
   func (self * Message)PublishChatroom(fromUserId string, toChatroomId []string, txtMessage TxtMessage)(*CodeSuccessReslut, error) {
 	  if( fromUserId == "") {
 		return nil,errors.New("Paramer 'fromUserId' is required");
